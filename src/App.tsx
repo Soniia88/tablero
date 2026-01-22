@@ -1,22 +1,18 @@
-import Tabla from './components/tabla';
+
+import Board from "./components/board";
+import Header from "./components/header";
+import TaskForm from "./components/taskForm";
+import { useLocalStorage } from "./hooks/useLocalStorage";
+import type { Task } from "./models/task";
 
 function App() {
-  const tareasTodo = [
-    { id: 1, texto: 'tarea 1' }
-  ];
-
-  const tareasDoing = [
-    { id: 3, texto: 'tarea 2' }
-  ];
-
-  const tareasDone = [
-    { id: 4, texto: 'tarea 3' }
-  ];
+  const [tasks, setTasks] = useLocalStorage<Task[]>("tasks", []);
 
   return (
-    <div>
-      <h1>Tablero Kanban de Tareas</h1>
-      <Tabla todo={tareasTodo} doing={tareasDoing} done={tareasDone} />
+    <div className="app">
+      <Header />
+      <TaskForm setTasks={setTasks} />
+      <Board tasks={tasks} setTasks={setTasks} />
     </div>
   );
 }
