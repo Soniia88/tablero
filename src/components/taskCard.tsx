@@ -6,6 +6,7 @@ interface Props {
 }
 
 const TaskCard = ({ task, setTasks }: Props) => {
+  //Inicia el arrastre
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
     e.dataTransfer.setData("taskId", task.id);
   };

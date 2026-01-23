@@ -13,14 +13,15 @@ const TaskForm = ({ setTasks }: Props) => {
 
     if (!title.trim()) return;
 
+    // Creación de una tarea nueva
     const newTask: Task = {
       id: crypto.randomUUID(),
       title,
       status: "TODO",
       color: "#" + Math.floor(Math.random() * 16777215).toString(16),
-  };
+    };
 
-
+    // Añade la tarea al estado global
     setTasks(prev => [...prev, newTask]);
     setTitle("");
   };

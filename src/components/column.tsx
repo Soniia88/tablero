@@ -16,6 +16,7 @@ const Column = ({ status, tasks, setTasks }: Props) => {
     e.preventDefault();
   };
 
+  // Maneja cuando se suelta una tarea en la columna
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     const taskId = e.dataTransfer.getData("taskId");
 

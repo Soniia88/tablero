@@ -52,12 +52,6 @@ body {
   margin-top: 0.5rem;
 }
 
-.task.selected {
-  background-color: #15803d; 
-  color: white;
-  border-color: #14532d;
-}
-
 button {
   cursor: pointer;
 }
