@@ -14,11 +14,11 @@ const TaskForm = ({ setTasks }: Props) => {
     if (!title.trim()) return;
 
     const newTask: Task = {
-  id: crypto.randomUUID(),
-  title,
-  status: "TODO",
-  selected: false,
-};
+      id: crypto.randomUUID(),
+      title,
+      status: "TODO",
+      color: "#" + Math.floor(Math.random() * 16777215).toString(16),
+  };
 
 
     setTasks(prev => [...prev, newTask]);
@@ -26,7 +26,7 @@ const TaskForm = ({ setTasks }: Props) => {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form style={{ padding: ' 0px 0px 20px 0px'}} onSubmit={handleSubmit}>
       <input
         value={title}
         onChange={e => setTitle(e.target.value)}

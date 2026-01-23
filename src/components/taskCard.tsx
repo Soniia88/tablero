@@ -10,16 +10,6 @@ const TaskCard = ({ task, setTasks }: Props) => {
     e.dataTransfer.setData("taskId", task.id);
   };
 
-  const selectTask = () => {
-    setTasks(prev =>
-      prev.map(t =>
-        t.id === task.id
-          ? { ...t, selected: true }
-          : { ...t, selected: false }
-      )
-    );
-  };
-
   const deleteTask = () => {
     setTasks(prev => prev.filter(t => t.id !== task.id));
   };
@@ -37,16 +27,14 @@ const TaskCard = ({ task, setTasks }: Props) => {
 
   return (
     <div
-      className={`task ${task.selected ? "selected" : ""}`}
+      className="task"
+      style={{ backgroundColor: task.color }}
       draggable
       onDragStart={handleDragStart}
-      onClick={selectTask}
     >
       <p>{task.title}</p>
-      <div className="task-actions">
         <button onClick={editTask}>Editar</button>
         <button onClick={deleteTask}>Eliminar</button>
-      </div>
     </div>
   );
 };

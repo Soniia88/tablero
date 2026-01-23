@@ -4,5 +4,5 @@ export interface Task {
   id: string;
   title: string;
   status: TaskStatus;
-  selected: boolean;
+  color: string;
 }
