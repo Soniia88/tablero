@@ -1,18 +1,49 @@
-
 import Board from "./components/board";
 import Header from "./components/header";
 import TaskForm from "./components/taskForm";
-import { useLocalStorage } from "./hooks/useLocalStorage";
-import type { Task } from "./models/task";
+import { useTasks } from "./hooks/useTasks";
 
 function App() {
-  const [tasks, setTasks] = useLocalStorage<Task[]>("tasks", []);
+  const {
+    tasks,
+    loading,
+    error,
+    addTask,
+    editTask,
+    removeTask,
+    moveTask,
+  } = useTasks();
+
+  if (loading) {
+    return (
+      <div className="app">
+        <Header />
+        <p>Cargando tareas...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="app">
+        <Header />
+        <p className="error">{error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="app">
       <Header />
-      <TaskForm setTasks={setTasks} />
-      <Board tasks={tasks} setTasks={setTasks} />
+
+      <TaskForm addTask={addTask} />
+
+      <Board
+        tasks={tasks}
+        onEdit={editTask}
+        onDelete={removeTask}
+        onMove={moveTask}
+      />
     </div>
   );
 }

@@ -1,41 +1,51 @@
 import { useState, type FormEvent } from "react";
-import type { Task } from "../models/task";
 
 interface Props {
-  setTasks: React.Dispatch<React.SetStateAction<Task[]>>;
+  addTask: (title: string) => Promise<void>; // ahora llama al hook que hace POST a la API
 }
 
-const TaskForm = ({ setTasks }: Props) => {
+const TaskForm = ({ addTask }: Props) => {
   const [title, setTitle] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
     if (!title.trim()) return;
 
-    // Creación de una tarea nueva
-    const newTask: Task = {
-      id: crypto.randomUUID(),
-      title,
-      status: "TODO",
-      color: "#" + Math.floor(Math.random() * 16777215).toString(16),
-    };
+    setLoading(true);
+    setError(null);
 
-    // Añade la tarea al estado global
-    setTasks(prev => [...prev, newTask]);
-    setTitle("");
+    try {
+      // Llamamos a la función del hook que hace POST a la API
+      await addTask(title);
+      setTitle(""); // limpiar input
+    } catch (err: any) {
+      setError(err?.message || "Error creando tarea");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <form style={{ padding: ' 0px 0px 20px 0px'}} onSubmit={handleSubmit}>
+    <form
+      style={{ padding: "0px 0px 20px 0px" }}
+      onSubmit={handleSubmit}
+    >
       <input
         value={title}
-        onChange={e => setTitle(e.target.value)}
+        onChange={(e) => setTitle(e.target.value)}
         placeholder="Nueva tarea"
+        disabled={loading}
       />
-      <button>Crear</button>
+      <button type="submit" disabled={loading}>
+        {loading ? "Creando..." : "Crear"}
+      </button>
+      {error && <p style={{ color: "red" }}>{error}</p>}
     </form>
   );
 };
 
 export default TaskForm;
+

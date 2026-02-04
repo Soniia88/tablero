@@ -2,30 +2,24 @@ import { useState } from "react";
 import type { TaskStatus, Task } from "../models/task";
 import TaskCard from "./taskCard";
 
-
 interface Props {
   status: TaskStatus;
   tasks: Task[];
-  setTasks: React.Dispatch<React.SetStateAction<Task[]>>;
+  onMove: (taskId: string, newStatus: TaskStatus) => void;
+  onEdit: (taskId: string, title: string) => void;
+  onDelete: (taskId: string) => void;
 }
 
-const Column = ({ status, tasks, setTasks }: Props) => {
+const Column = ({ status, tasks, onMove, onEdit, onDelete }: Props) => {
   const [isOver, setIsOver] = useState(false);
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
   };
 
-  // Maneja cuando se suelta una tarea en la columna
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     const taskId = e.dataTransfer.getData("taskId");
-
-    setTasks(prev =>
-      prev.map(task =>
-        task.id === taskId ? { ...task, status } : task
-      )
-    );
-
+    onMove(taskId, status);
     setIsOver(false);
   };
 
@@ -38,8 +32,14 @@ const Column = ({ status, tasks, setTasks }: Props) => {
       onDragLeave={() => setIsOver(false)}
     >
       <h2>{status}</h2>
-      {tasks.map(task => (
-        <TaskCard key={task.id} task={task} setTasks={setTasks} />
+
+      {tasks.map((task) => (
+        <TaskCard
+          key={task.id}
+          task={task}
+          onEdit={onEdit}
+          onDelete={onDelete}
+        />
       ))}
     </section>
   );

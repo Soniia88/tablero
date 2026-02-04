@@ -2,28 +2,25 @@ import type { Task } from "../models/task";
 
 interface Props {
   task: Task;
-  setTasks: React.Dispatch<React.SetStateAction<Task[]>>;
+  onEdit: (taskId: string, title: string) => void;
+  onDelete: (taskId: string) => void;
 }
 
-const TaskCard = ({ task, setTasks }: Props) => {
-  //Inicia el arrastre
+const TaskCard = ({ task, onEdit, onDelete }: Props) => {
+  // Inicia el arrastre
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
-    e.dataTransfer.setData("taskId", task.id);
+    e.dataTransfer.setData("taskId", task.id.toString());
   };
 
-  const deleteTask = () => {
-    setTasks(prev => prev.filter(t => t.id !== task.id));
+  const handleDelete = () => {
+    onDelete(task.id);
   };
 
-  const editTask = () => {
+  const handleEdit = () => {
     const newTitle = prompt("Nuevo título", task.title);
     if (!newTitle?.trim()) return;
 
-    setTasks(prev =>
-      prev.map(t =>
-        t.id === task.id ? { ...t, title: newTitle } : t
-      )
-    );
+    onEdit(task.id, newTitle);
   };
 
   return (
@@ -34,8 +31,11 @@ const TaskCard = ({ task, setTasks }: Props) => {
       onDragStart={handleDragStart}
     >
       <p>{task.title}</p>
-        <button onClick={editTask}>Editar</button>
-        <button onClick={deleteTask}>Eliminar</button>
+
+      <div className="task-actions">
+        <button onClick={handleEdit}>Editar</button>
+        <button onClick={handleDelete}>Eliminar</button>
+      </div>
     </div>
   );
 };

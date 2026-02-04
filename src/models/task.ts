@@ -1,7 +1,7 @@
 export type TaskStatus = "TODO" | "DOING" | "DONE";
 
 export interface Task {
-  id: string;
+  id?: string;
   title: string;
   status: TaskStatus;
   color: string;
