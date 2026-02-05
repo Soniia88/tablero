@@ -1,71 +1,169 @@
-# React + TypeScript + Vite
+# 📋 Tablero de Tareas - React + TypeScript + Vite
 
-1. `git clone` → descarga el código
-2. `npm install` → instala **todas** las dependencias necesarias
-3. `npm run dev` → ejecuta Vite y React
+Bienvenido a este proyecto. Es una **aplicación web para gestionar tareas** (como un tablero de notas). Las tareas se organizan en columnas (estados) y puedes arrastrarlas de una a otra.
 
 ---
 
-💡 Para desarrollo con una API local puedes usar `json-server` (no viene instalado por defecto):
+## 🚀 ¿Qué necesito para empezar?
 
-- Arranca la API de ejemplo con:
-
-```
-npx json-server --watch db.json --port 8080
-```
-
-- O usa el script del proyecto:
-
-```
-npm run api
-```
-
-La app lee la URL base desde `.env` (clave `VITE_API_BASE_URL`). Si modificas `.env` reinicia `npm run dev` para que Vite recoja los cambios.
+Antes de nada, asegúrate de tener instalado:
+- **Node.js** (descárgalo desde https://nodejs.org) - incluye `npm` que usaremos para instalar cosas
+- **Git** (opcional, pero útil para descargar el código) - https://git-scm.com
 
 ---
 
-⚠️ Si en el navegador ves `Failed to fetch` o la app no carga tareas, comprueba lo siguiente:
+## 📥 Paso 1: Descargar y preparar el proyecto
 
-1. ¿Has arrancado la API mock? Ejecuta en otra terminal:
+Abre una **terminal** (en Windows: PowerShell, CMD, o la terminal de VS Code) y ejecuta:
 
+```bash
+# Si tienes Git instalado, descarga el proyecto:
+git clone <url-del-repositorio>
+cd tablero
+
+# Si no, descarga el archivo .zip, descomprímelo y abre la carpeta en la terminal
 ```
-npm run api
-```
-
-(El script usa `npx json-server` para no necesitar instalación global; si prefieres instala `json-server` con `npm i -D json-server`.)
-
-2. ¿El endpoint responde? Abre `http://localhost:8080/tasks` en el navegador: debe devolver JSON.
-3. Revisa la pestaña Network en DevTools: verifica la URL solicitada y el status.
-4. Asegúrate de reiniciar Vite si cambiaste `.env`: `npm run dev`.
-5. Si ves una página HTML en la respuesta (por ejemplo `index.html`), la URL base está mal (probablemente tiene `/tasks` de más). Asegúrate de que `.env` sea `VITE_API_BASE_URL=http://localhost:8080`.
-
-💡 Para evitar problemas de CORS durante desarrollo, este proyecto incluye un proxy en `vite.config.ts` que redirige las peticiones a `/tasks` hacia la URL indicada en `.env`. Reinicia `npm run dev` para que el proxy entre en efecto.
-
-Si tras esto sigue fallando, pega aquí la URL que muestra en Network y el texto completo del error de la consola para que lo revise.
 
 ---
 
-## 📦 Cambios aplicados (detallado)
-- **`.env`**: configurada para apuntar al backend real en producción (por ejemplo `VITE_API_BASE_URL=http://localhost:8080`).
-- **`.env.development`**: creada y dejada vacía (`VITE_API_BASE_URL=`) para forzar que en desarrollo la app use rutas relativas y el **proxy de Vite** (evita CORS en dev).
-- **`src/api/tasksApi.ts`**:
-  - Normaliza la `BASE_URL` (quita slash final).
-  - Añadido `parseResponse` para validar `content-type` y lanzar errores con el body (útil para detectar HTML/errores del servidor).
-  - Añadida `checkBackend()` para comprobar conectividad, detectar timeouts y distinguir errores de CORS.
-- **`src/hooks/useTasks.ts`**: ahora llama `checkBackend()` antes de `getTasks()` y muestra errores amigables en la UI.
-- **`vite.config.ts`**: añadido un **proxy dev** que redirige `/tasks` a la URL de `VITE_API_BASE_URL` (o `http://localhost:8080` si la variable está vacía) para evitar CORS durante el desarrollo.
-- **`db.json`** (ejemplo) y script `npm run api` (usa `npx json-server ...`) quedaron en el repo como opción de mock local si se necesita para pruebas rápidas.
+## 🔧 Paso 2: Instalar las dependencias
 
-## 🧪 Cómo probar localmente
-1. Si trabajas con tu **backend real**: ajusta `.env` con la URL base y reinicia Vite: `npm run dev`.
-2. Si necesitas evitar CORS durante desarrollo y tu backend corre en `http://localhost:8080`: deja `.env.development` con `VITE_API_BASE_URL=` y reinicia `npm run dev` para que Vite use el proxy y las peticiones a `/tasks` se reenvíen al backend.
-3. Revisa DevTools → Network → `GET /tasks` debe devolver `200` y `Content-Type: application/json`.
+Las "dependencias" son librerías de código que el proyecto necesita para funcionar (React, TypeScript, etc.). Para instalarlas, ejecuta:
 
-## 📁 Archivo con los cambios
-He creado un archivo comprimido con el estado del proyecto tras aplicar las correcciones: **`tablero-with-fixes.zip`** (en la raíz del proyecto). Contiene todos los archivos modificados.
+```bash
+npm install
+```
 
-## 📝 Notas adicionales
-- La solución definitiva en producción es **habilitar CORS** en el backend (añadir `Access-Control-Allow-Origin` o configurar origin específico). El proxy es solo para facilitar development.
-- Si quieres que haga un PR con los cambios (o un commit separado) dímelo y lo preparo.
+Esto descargará y instalará todo lo necesario. Verás una carpeta `node_modules/` que se crea automáticamente (no la toques, es solo para la máquina).
 
-Si necesitas más detalle de cualquier cambio (línea a línea), lo preparo y te lo explico.
+---
+
+## ▶️ Paso 3: Ejecutar la aplicación
+
+Una vez instalado, arranca el servidor de desarrollo con:
+
+```bash
+npm run dev
+```
+
+Verás algo como:
+```
+  VITE v4.x.x  ready in XXX ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  press h to show help
+```
+
+Abre tu navegador y ve a `http://localhost:5173/` - ¡verás la app funcionando!
+
+---
+
+## 🔌 Paso 4: Conectar con tu servidor (API)
+
+La app necesita obtener las tareas de algún lado. Para ello necesitas una **API** (un servidor que proporciona datos).
+
+Edita el archivo `.env`:
+
+```env
+VITE_API_BASE_URL=http://tu-servidor:3000
+```
+
+(Reemplaza `http://tu-servidor:3000` con la dirección real de tu servidor)
+
+Luego **reinicia** `npm run dev` para que lea el cambio.
+
+---
+
+## 🛠️ Comandos útiles
+
+| Comando | Qué hace |
+|---------|----------|
+| `npm run dev` | Inicia la app en modo desarrollo (ve a http://localhost:5173) |
+| `npm run build` | Prepara la app para producción (genera una carpeta `dist/`) |
+| `npm run lint` | Revisa el código en busca de errores |
+
+---
+
+## ⚠️ Algo no funciona: Guía de solución de problemas
+
+### Problema 1: "Failed to fetch" o la app no carga tareas
+
+**Causa**: La API no está ejecutándose, no es accesible, o la app no sabe dónde conectar.
+
+**Solución**:
+1. Verifica que tu servidor esté ejecutándose y accesible
+2. Comprueba que `.env` tiene la URL correcta: `VITE_API_BASE_URL=http://tu-servidor:puerto`
+3. Presiona `Ctrl+C` en la terminal donde corre `npm run dev`
+4. Ejecuta nuevamente: `npm run dev` para que cargue el nuevo `.env`
+5. Abre la página en el navegador y mira la consola (F12) para ver el error exacto
+
+### Problema 2: "Port already in use" (puerto en uso)
+
+**Causa**: Otro programa ya usa el puerto 5173 o 8080.
+
+**Solución A** (mata el proceso):
+```bash
+# En Windows, en PowerShell:
+Get-Process | Where-Object {$_.Port -eq 5173} | Stop-Process -Force
+```
+
+**Solución B** (usa otro puerto):
+```bash
+npm run dev -- --port 3000
+```
+
+### Problema 3: Cambié `.env` pero nada cambia
+
+**Causa**: Vite cachea los cambios, necesita reiniciarse.
+
+**Solución**:
+1. Presiona `Ctrl+C` en la terminal donde corre `npm run dev`
+2. Ejecuta nuevamente: `npm run dev`
+
+### Problema 4: Veo errores de TypeScript pero la app funciona
+
+**Normal**. TypeScript te avisa de posibles problemas durante el desarrollo. No impide que la app funcione, pero es bueno arreglarlo.
+
+---
+
+## 📁 Estructura del proyecto
+
+```
+tablero/
+├── src/
+│   ├── api/
+│   │   └── tasksApi.ts          ← Código para conectar con la API
+│   ├── components/              ← Componentes de la interfaz (botones, formularios, etc.)
+│   │   ├── board.tsx
+│   │   ├── column.tsx
+│   │   ├── header.tsx
+│   │   ├── taskCard.tsx
+│   │   └── taskForm.tsx
+│   ├── hooks/
+│   │   └── useTasks.ts          ← Lógica para obtener y gestionar tareas
+│   ├── models/
+│   │   └── task.ts              ← Definición de qué es una "tarea"
+│   ├── App.tsx                  ← Componente principal
+│   ├── main.tsx                 ← Punto de entrada
+│   └── ... (estilos y otros)
+├── .env                          ← Configuración (URL de la API)
+├── vite.config.ts               ← Configuración de Vite
+├── tsconfig.json                ← Configuración de TypeScript
+├── package.json                 ← Lista de dependencias y scripts
+└── README.md                     ← Este archivo
+```
+
+**En resumen**:
+- **`src/`**: Todo el código de la app
+- **`.env`**: Configuración (dónde está tu servidor API)
+- **`package.json`**: Instrucciones de qué instalar y qué comandos ejecutar
+
+---
+
+## 💡 Tips
+
+1. **Abre la consola del navegador** (F12) para ver errores: te ayudará a entender qué va mal
+2. **Los cambios en el código se ven automáticamente**: no necesitas reiniciar, Vite se encarga
+3. **Si cambias `.env`**: reinicia `npm run dev` para que cargue la nueva configuración
+4. **Verifica la conexión**: abre `http://localhost:5173` y mira la pestaña Network en DevTools (F12) para ver si las peticiones a la API tienen éxito
+
