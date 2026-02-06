@@ -135,16 +135,16 @@ export async function createTask(task: Task): Promise<Task> {
 ```typescript
 export async function updateTask(id: string, updates: Partial<Task>): Promise<Task> {
   const res = await fetch(`${BASE_URL}/tasks/${id}`, {
-    method: "PATCH",
+    method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(updates),
   });
   return parseResponse<Task>(res);
 }
 ```
-- **Método**: PATCH (actualización parcial)
+- **Método**: PUT (actualización completa con validación)
 - **Endpoint**: `/tasks/:id`
-- **Body**: Solo los campos que cambian (ej: `{ title: "Nuevo título" }`)
+- **Body**: Objeto con los campos a actualizar (debe incluir `title` y `status`)
 - **Respuesta**: La tarea actualizada completa
 
 ### deleteTask()
@@ -202,13 +202,16 @@ useEffect(() => {
 
 ```typescript
 const addTask = async (title: string) => {
+  const randomColor = getRandomColor();
   try {
     const newTask = await createTask({
       title,
-      status: "TODO",        // Nueva tarea siempre en TODO
-      color: getRandomColor(),
+      status: "TODO",
+      color: randomColor,
     });
-    setTasks((prev) => [...prev, newTask]);  // Agrega a la lista
+    // Asegurar que la tarea tiene color (por si el backend no lo devuelve)
+    const taskWithColor = { ...newTask, color: newTask.color || randomColor };
+    setTasks((prev) => [...prev, taskWithColor]);
   } catch (err: any) {
     setError(err?.message || "Error creando tarea");
   }
@@ -216,27 +219,37 @@ const addTask = async (title: string) => {
 ```
 
 **Pasos:**
-1. Envía POST al backend con título y color aleatorio
-2. Backend devuelve la tarea con `id` asignado
-3. Agrega la tarea al estado local
-4. Si falla, guarda el error
+1. Genera un color aleatorio antes de enviar
+2. Envía POST al backend con título, status y color
+3. Backend devuelve la tarea con `id` asignado
+4. Si el backend no devuelve color, usa el generado localmente
+5. Agrega la tarea al estado local
+6. Si falla, guarda el error
+
+**Color:**
+- Cada tarea nueva recibe un color aleatorio
+- El color se preserva aunque edites la tarea después
 
 ## editTask()
 
 ```typescript
 const editTask = async (id: string, title: string) => {
-  const previousTasks = [...tasks];  // 👈 Guardar estado actual
+  const previousTasks = [...tasks];
+  const taskToEdit = tasks.find((t) => t.id === id);
+  
   setTasks((prev) =>
-    prev.map((t) => (t.id === id ? { ...t, title } : t))  // 👈 Cambio optimista (inmediato)
+    prev.map((t) => (t.id === id ? { ...t, title } : t))
   );
 
   try {
-    const updatedTask = await updateTask(id, { title });  // 👈 Enviar al backend
+    const updatedTask = await updateTask(id, { title, status: taskToEdit?.status });
+    // Preservar el color original
+    const taskWithOriginalColor = { ...updatedTask, color: taskToEdit?.color || updatedTask.color };
     setTasks((prev) =>
-      prev.map((t) => (t.id === id ? updatedTask : t))   // 👈 Confirmar con respuesta real
+      prev.map((t) => (t.id === id ? taskWithOriginalColor : t))
     );
   } catch (err: any) {
-    setTasks(previousTasks);  // 👈 Si falla, revertir cambio
+    setTasks(previousTasks); // rollback
     setError(err?.message || "Error editando tarea");
   }
 };
@@ -244,12 +257,13 @@ const editTask = async (id: string, title: string) => {
 
 **Patrón: Optimistic Update (Actualización Optimista)**
 1. Guarda el estado previo por si falla
-2. Actualiza UI **inmediatamente** (sin esperar al servidor)
-3. Envía cambio al backend
-4. Si respuesta es OK, confirma con datos reales
-5. Si falla, revierte a estado anterior
+2. Guarda tarea actual para acceder a `status` y `color`
+3. Actualiza UI **inmediatamente** (sin esperar al servidor)
+4. Envía cambio al backend (con `title` y `status`)
+5. Si respuesta es OK, confirma pero **preserva el color original**
+6. Si falla, revierte a estado anterior
 
-**Ventaja**: La UI responde al instante, aunque luego espere confirmación
+**Ventaja**: La UI responde al instante, aunque luego espere confirmación. El color nunca cambia en ediciones.
 
 ## removeTask()
 
@@ -268,21 +282,40 @@ const removeTask = async (id: string) => {
 ```
 
 Similar a `editTask()`: actualización optimista con rollback si falla.
-
-## moveTask()
-
-```typescript
-const moveTask = async (id: string, newStatus: TaskStatus) => {
+taskToMove = tasks.find((t) => String(t.id) === String(id));
+  
+  if (!taskToMove) {
+    setError(`Tarea no encontrada (ID: ${id})`);
+    return;
+  }
+  
   const previousTasks = [...tasks];
+  
   setTasks((prev) =>
-    prev.map((t) => (t.id === id ? { ...t, status: newStatus } : t))  // Mover optimista
+    prev.map((t) => (t.id === id || String(t.id) === String(id) ? { ...t, status: newStatus } : t))
   );
 
   try {
-    await updateTask(id, { status: newStatus });  // Confirmar en backend
+    const updatedTask = await updateTask(id, { title: taskToMove.title, status: newStatus });
+    // Preservar el color original
+    const taskWithOriginalColor = { ...updatedTask, color: taskToMove.color || updatedTask.color };
+    setTasks((prev) =>
+      prev.map((t) => (String(t.id) === String(id) ? taskWithOriginalColor : t))
+    );
   } catch (err: any) {
-    setTasks(previousTasks);
+    setTasks(previousTasks); // rollback
     setError(err?.message || "Error moviendo tarea");
+  }
+};
+```
+
+Se ejecuta cuando arrastras una tarea entre columnas:
+1. Busca la tarea guardando su `title` y `color`
+2. Actualización optimista: cambia status en UI al instante
+3. Envía al backend con `title` (requerido) y `status`
+4. Si OK, confirma pero **preserva el color original**
+5. Si falla, revierte cambios
+6. Compara IDs como strings por compatibilidad tipo (número vs string)
   }
 };
 ```
@@ -686,7 +719,7 @@ Si falla: setTasks(previousTasks) la restaura
 ```
 GET    /tasks              → Obtiene todas las tareas
 POST   /tasks              → Crea nueva tarea
-PATCH  /tasks/:id          → Actualiza tarea (parcial)
+PUT    /tasks/:id          → Actualiza tarea (requiere title y status)
 DELETE /tasks/:id          → Elimina tarea
 ```
 
@@ -697,6 +730,19 @@ DELETE /tasks/:id          → Elimina tarea
   { "id": "2", "title": "Escribir reporte", "status": "DOING", "color": "#60a5fa" }
 ]
 ```
+
+**Formato esperado en PUT /tasks/:id:**
+```json
+{
+  "title": "Nuevo título",
+  "status": "DONE"
+}
+```
+
+**Importante:** 
+- El endpoint PUT debe aceptar tanto `title` como `status` (ambos son obligatorios)
+- El `color` se asigna localmente y no se envía en actualizaciones
+- El `id` es generado por el backend al crear (en POST)
 
 ---
 

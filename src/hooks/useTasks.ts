@@ -14,7 +14,12 @@ export function useTasks() {
     checkBackend()
       .then(() => getTasks())
       .then((data) => {
-        setTasks(data);
+        // Asignar color a tareas que no lo tengan
+        const tasksWithColor = data.map((task) => ({
+          ...task,
+          color: task.color || getRandomColor(),
+        }));
+        setTasks(tasksWithColor);
         setError(null);
       })
       .catch((err: any) => setError(err?.message || "Error conectando al backend"))
@@ -23,13 +28,16 @@ export function useTasks() {
 
   // 🔹 Crear tarea
   const addTask = async (title: string) => {
+    const randomColor = getRandomColor();
     try {
       const newTask = await createTask({
         title,
         status: "TODO",
-        color: getRandomColor(),
+        color: randomColor,
       });
-      setTasks((prev) => [...prev, newTask]);
+      // Asegurar que la tarea tiene color (por si el backend no lo devuelve)
+      const taskWithColor = { ...newTask, color: newTask.color || randomColor };
+      setTasks((prev) => [...prev, taskWithColor]);
     } catch (err: any) {
       setError(err?.message || "Error creando tarea");
     }
@@ -38,14 +46,18 @@ export function useTasks() {
   // 🔹 Editar tarea
   const editTask = async (id: string, title: string) => {
     const previousTasks = [...tasks];
+    const taskToEdit = tasks.find((t) => t.id === id);
+    
     setTasks((prev) =>
       prev.map((t) => (t.id === id ? { ...t, title } : t))
     );
 
     try {
-      const updatedTask = await updateTask(id, { title });
+      const updatedTask = await updateTask(id, { title, status: taskToEdit?.status });
+      // Preservar el color original
+      const taskWithOriginalColor = { ...updatedTask, color: taskToEdit?.color || updatedTask.color };
       setTasks((prev) =>
-        prev.map((t) => (t.id === id ? updatedTask : t))
+        prev.map((t) => (t.id === id ? taskWithOriginalColor : t))
       );
     } catch (err: any) {
       setTasks(previousTasks); // rollback
@@ -68,13 +80,26 @@ export function useTasks() {
 
   // 🔹 Mover tarea (Drag & Drop)
   const moveTask = async (id: string, newStatus: TaskStatus) => {
+    const taskToMove = tasks.find((t) => String(t.id) === String(id));
+    
+    if (!taskToMove) {
+      setError(`Tarea no encontrada (ID: ${id})`);
+      return;
+    }
+    
     const previousTasks = [...tasks];
+    
     setTasks((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, status: newStatus } : t))
+      prev.map((t) => (t.id === id || String(t.id) === String(id) ? { ...t, status: newStatus } : t))
     );
 
     try {
-      await updateTask(id, { status: newStatus });
+      const updatedTask = await updateTask(id, { title: taskToMove.title, status: newStatus });
+      // Preservar el color original
+      const taskWithOriginalColor = { ...updatedTask, color: taskToMove.color || updatedTask.color };
+      setTasks((prev) =>
+        prev.map((t) => (String(t.id) === String(id) ? taskWithOriginalColor : t))
+      );
     } catch (err: any) {
       setTasks(previousTasks); // rollback
       setError(err?.message || "Error moviendo tarea");

@@ -81,7 +81,7 @@ export async function createTask(task: Task): Promise<Task> {
 // Actualizar tarea (parcial)
 export async function updateTask(id: string, updates: Partial<Task>): Promise<Task> {
   const res = await fetch(`${BASE_URL}/tasks/${id}`, {
-    method: "PATCH",
+    method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(updates),
   });

@@ -72,6 +72,12 @@ VITE_API_BASE_URL=http://tu-servidor:3000
 
 Luego **reinicia** `npm run dev` para que lea el cambio.
 
+**Nota:** Los endpoints esperados por la API son:
+- `GET /tasks` - Obtiene todas las tareas
+- `POST /tasks` - Crea una nueva tarea
+- `PUT /tasks/:id` - Actualiza una tarea existente
+- `DELETE /tasks/:id` - Elimina una tarea
+
 ---
 
 ## 🛠️ Comandos útiles
