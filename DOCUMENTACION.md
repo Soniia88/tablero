@@ -746,7 +746,44 @@ DELETE /tasks/:id          → Elimina tarea
 
 ---
 
-# 📝 Resumen
+# � Configuración CORS en el Backend
+
+La app React corre en `http://localhost:5173` y el backend en `http://localhost:8080`. Sin configuración CORS, el navegador **bloquea** las solicitudes entre orígenes distintos.
+
+## Solución: CorsConfig en Spring Boot
+
+Crea un archivo `CorsConfig.java` en tu proyecto backend:
+
+```java
+package com.ejemplo.config;
+
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+@Configuration
+public class CorsConfig implements WebMvcConfigurer {
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/**")
+            .allowedOrigins("http://localhost:5173")
+            .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+            .allowedHeaders("*")
+            .allowCredentials(true)
+            .maxAge(3600);
+    }
+}
+```
+
+**Qué hace:**
+- `addMapping("/**")` - Aplica a todos los endpoints
+- `allowedOrigins("http://localhost:5173")` - Permite solicitudes desde React
+- `allowedMethods(...)` - Métodos HTTP permitidos
+- `maxAge(3600)` - Cachea la config por 1 hora
+
+Después de agregar esto, **reinicia tu backend** para que los cambios tomen efecto.
+
+---
 
 Este proyecto es un ejemplo completo de:
 - ✅ Aplicación React modular y bien estructurada

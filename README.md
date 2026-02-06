@@ -103,7 +103,38 @@ Luego **reinicia** `npm run dev` para que lea el cambio.
 4. Ejecuta nuevamente: `npm run dev` para que cargue el nuevo `.env`
 5. Abre la página en el navegador y mira la consola (F12) para ver el error exacto
 
-### Problema 2: "Port already in use" (puerto en uso)
+### Problema 2: "CORS policy: No 'Access-Control-Allow-Origin' header"
+
+**Causa**: El backend no permite solicitudes desde `http://localhost:5173` (donde corre React).
+
+**Solución**: Configura CORS en tu backend (Spring Boot):
+
+Crea un archivo `CorsConfig.java` en tu proyecto:
+
+```java
+package com.ejemplo.config;
+
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+@Configuration
+public class CorsConfig implements WebMvcConfigurer {
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/**")
+            .allowedOrigins("http://localhost:5173")
+            .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+            .allowedHeaders("*")
+            .allowCredentials(true)
+            .maxAge(3600);
+    }
+}
+```
+
+Luego **reinicia tu backend** para que los cambios tomen efecto.
+
+### Problema 3: "Port already in use" (puerto en uso)
 
 **Causa**: Otro programa ya usa el puerto 5173 o 8080.
 
